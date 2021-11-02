@@ -5,10 +5,10 @@ RUN apt-get update -y && \
     git clone https://github.com/cyfronet-fid/oms-adapter-jira.git && \
     cd oms-adapter-jira && \
     pipenv install --system && \
-    cd oms-adapter-jira/oms_jira/services && \
+    cd oms_jira/services && \
     sed -i "s|first_name: str| # first_name: str|g" mp.py && \
     sed -i "s|last_name: str| # last_name: str|g" mp.py && \
-    sed -i "s|timestamp = datetime.datetime|timestamp: datetime.datetime|g"
+    sed -i "s|timestamp = datetime.datetime|timestamp: datetime.datetime|g" mp.py
 
 
 ENV PYTHONPATH "${PYTHONPATH}:/oms-adapter-jira"
@@ -18,7 +18,8 @@ COPY . /src
 WORKDIR /src
 
 RUN pip install -r requirements/requirements.txt --no-cache-dir && \
-    touch src/last_timestamp.txt
+    touch src/last_timestamp.txt && \
+    pip install flask-restx
 
 ENTRYPOINT [ "python3" ]
 

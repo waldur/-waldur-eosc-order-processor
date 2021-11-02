@@ -31,7 +31,7 @@ def refresh_timestamp(time_now):  # file must be present, create in app.py or do
 
     except FileNotFoundError:
         with open('last_timestamp.txt', 'w+') as stamp:
-            last_timestamp = datetime.utcnow()
+            last_timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
             logging.info(f'File {stamp} was created.')
 
     else:
