@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-import urllib.parse
 from datetime import datetime
 
 import pycountry
@@ -26,14 +25,13 @@ logger = logging.getLogger(__name__)
 EOSC_URL = os.environ.get("EOSC_URL")  # polling url
 TOKEN = os.environ.get("TOKEN")
 OMS_ID = os.environ.get("OMS_ID")
-WALDUR_URL = os.environ.get("WALDUR_URL")
+WALDUR_API_URL = os.environ.get("WALDUR_URL")
 WALDUR_TARGET_ORGANIZATION_NAME = os.environ.get(
     "WALDUR_TARGET_ORGANIZATION_NAME", "Test4All"
 )
 WALDUR_TOKEN = os.environ.get("WALDUR_TOKEN")
 
-WALDUR_API = urllib.parse.urljoin(WALDUR_URL, "api/")
-waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
+waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
 
