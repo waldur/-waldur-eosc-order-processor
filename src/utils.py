@@ -20,6 +20,9 @@ logging.basicConfig(
     format="[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - %(message)s",
 )
 
+logger = logging.getLogger(__name__)
+
+
 EOSC_URL = os.environ.get("EOSC_URL")  # polling url
 TOKEN = os.environ.get("TOKEN")
 OMS_ID = os.environ.get("OMS_ID")
@@ -320,26 +323,33 @@ def process_orders():
     events = get_events(refresh_timestamp(time_now=time_now))
     new_events = get_new_events(events, time_now)
     for event in new_events:
-        if event.resource == "project_item" and event.type == "create":
-            eosc_project_data = mp.get_project(event.project_id)
+        try:
+            if event.resource == "project_item" and event.type == "create":
+                eosc_project_data = mp.get_project(event.project_id)
 
-            eosc_project_item_data = mp.get_project_item(
-                event.project_id, event.project_item_id
-            )
-            waldur_organization_data = get_target_waldur_organization()
+                eosc_project_item_data = mp.get_project_item(
+                    event.project_id, event.project_item_id
+                )
+                waldur_organization_data = get_target_waldur_organization()
 
-            waldur_offering_data = waldur_client.list_marketplace_offerings(
-                {"name_exact": eosc_project_item_data.attributes.service}
-            )
-            waldur_project_data = get_or_create_project(
-                eosc_project_data=eosc_project_data,
-                waldur_organization_data=waldur_organization_data,
-            )
-            create_order(
-                waldur_offering_data=waldur_offering_data[0],
-                waldur_project_data_for_order=waldur_project_data,
-                eosc_project_item_data=eosc_project_item_data,
-            )
+                waldur_offering_data = waldur_client.list_marketplace_offerings(
+                    {"name_exact": eosc_project_item_data.attributes.service}
+                )
+                waldur_project_data = get_or_create_project(
+                    eosc_project_data=eosc_project_data,
+                    waldur_organization_data=waldur_organization_data,
+                )
+                create_order(
+                    waldur_offering_data=waldur_offering_data[0],
+                    waldur_project_data_for_order=waldur_project_data,
+                    eosc_project_item_data=eosc_project_item_data,
+                )
 
-        if event.type == "delete" or event.type == "update":
-            logging.info("Found event with unsupported type", event.type)
+            if event.type == "delete" or event.type == "update":
+                logging.info("Found event with unsupported type", event.type)
+        except Exception as e:
+            logger.error(
+                "The event %s can not be processed due to the following exception: %s",
+                event,
+                e,
+            )

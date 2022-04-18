@@ -8,11 +8,14 @@ logging.basicConfig(
     format="[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - %(message)s",
 )
 
+logger = logging.getLogger(__name__)
+
 
 def sync_orders():
-    utils.process_orders()
-    logging.info("process_orders is finished.")
-    return "The orders were synced"
+    try:
+        utils.process_orders()
+    except Exception as e:
+        logger.error("The application crashed due to the following exception: %s", e)
 
 
 if __name__ == "__main__":
