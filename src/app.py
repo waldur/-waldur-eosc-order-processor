@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 import utils
 
@@ -12,10 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 def sync_orders():
-    try:
-        utils.process_orders()
-    except Exception as e:
-        logger.error("The application crashed due to the following exception: %s", e)
+    while True:
+        logger.info("Processing orders...")
+        try:
+            utils.process_orders()
+        except Exception as e:
+            logger.error(
+                "The application crashed due to the following exception: %s", e
+            )
+        sleep(60)
 
 
 if __name__ == "__main__":
