@@ -260,6 +260,7 @@ def get_or_create_project(eosc_project_data, waldur_organization_data):
             f"Name of the project: {eosc_project_data.attributes.name}. "
             f'Customer name: {waldur_organization_data[0]["name"]}.'
         )
+        # TODO: exctract to a separate call
         invite_user_to_project(
             email=eosc_project_data.owner.email, project=create_project_data["uuid"]
         )
