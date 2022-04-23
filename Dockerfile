@@ -8,7 +8,7 @@ RUN apt-get update -y && \
     cd oms_jira/services && \
     sed -i "s|first_name: str| # first_name: str|g" mp.py && \
     sed -i "s|last_name: str| # last_name: str|g" mp.py && \
-    sed -i "s|timestamp = datetime.datetime|timestamp: datetime.datetime|g" mp.py \
+    sed -i "s|timestamp = datetime.datetime|timestamp: datetime.datetime|g" mp.py &&\
     sed -i "s|params = dict(oms_id=self.oms_id, from_timestamp=from_timestamp.isoformat())|params = dict(oms_id=self.oms_id, from_timestamp=from_timestamp.isoformat() + 'Z')|g" mp.py
 
 
