@@ -22,14 +22,24 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-EOSC_URL = os.environ.get("EOSC_URL")  # polling url
-TOKEN = os.environ.get("TOKEN")
-OMS_ID = os.environ.get("OMS_ID")
-WALDUR_API_URL = os.environ.get("WALDUR_URL")
-WALDUR_TARGET_ORGANIZATION_NAME = os.environ.get(
-    "WALDUR_TARGET_ORGANIZATION_NAME", "Test4All"
+def get_env_or_fail(env_variable_name):
+    # check that required environment variables is set and exit otherwise
+    value = os.environ.get(env_variable_name)
+    if not value:
+        logger.error(f'Mandatory variable {env_variable_name} is missing or empty.')
+        sys.exit(1)
+    else:
+        return value
+
+
+EOSC_URL = get_env_or_fail("EOSC_URL")  # polling url
+TOKEN = get_env_or_fail("TOKEN")
+OMS_ID = get_env_or_fail("OMS_ID")
+WALDUR_API_URL = get_env_or_fail("WALDUR_URL")
+WALDUR_TARGET_ORGANIZATION_NAME = get_env_or_fail(
+    "WALDUR_TARGET_ORGANIZATION_NAME",
 )
-WALDUR_TOKEN = os.environ.get("WALDUR_TOKEN")
+WALDUR_TOKEN = get_env_or_fail("WALDUR_TOKEN")
 
 waldur_client = WaldurClient(WALDUR_API_URL, WALDUR_TOKEN)
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
@@ -43,10 +53,10 @@ def refresh_timestamp(time_now):  # file must be present, create in app.py or do
     except FileNotFoundError:
         with open("last_timestamp.txt", "w+") as stamp:
             last_timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
-            logging.info(f"File {stamp} was created.")
+            logging.debug(f"File {stamp} was created.")
 
     else:
-        logging.info(f"Timestamp: {last_timestamp} from {stamp}")
+        logging.info(f"Timestamp: {last_timestamp} from {stamp.name}")
 
     now = str(time_now)
 
@@ -59,7 +69,7 @@ def refresh_timestamp(time_now):  # file must be present, create in app.py or do
 def get_events(timestamp):
     timestamp_datetime = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
     events = mp.list_events(timestamp_datetime, limit=None)
-    logging.info("GET events from EOSC MP")
+    logging.info(f"Received the following events from EOSC MP from {timestamp_datetime}: {events}.")
     return events
 
 
@@ -334,6 +344,9 @@ def process_orders():
                 waldur_offering_data = waldur_client.list_marketplace_offerings(
                     {"name_exact": eosc_project_item_data.attributes.service}
                 )
+                if len(waldur_offering_data) == 0:
+                    raise Exception(f'Could not lookup offering in Waldur with requested name {eosc_project_item_data.attributes.service}.')
+
                 waldur_project_data = get_or_create_project(
                     eosc_project_data=eosc_project_data,
                     waldur_organization_data=waldur_organization_data,
@@ -345,10 +358,8 @@ def process_orders():
                 )
 
             if event.type == "delete" or event.type == "update":
-                logging.info("Found event with unsupported type", event.type)
+                logging.info(f"Found event with unsupported type: {event.type}.")
         except Exception as e:
-            logger.error(
-                "The event %s can not be processed due to the following exception: %s",
-                event,
-                e,
+            logger.exception(
+                "The event can not be processed due to the following exception"
             )
