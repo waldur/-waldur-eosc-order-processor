@@ -117,20 +117,21 @@ def patch_project_item(project_item_data):
             ),
             verify=False,
             data={
-                # "user_secrets": {"access credentials": WALDUR_TOKEN}
+                "status": {
+                    "value": "string",
+                    "type": "ready"
+                },
             },
         )
     except ValueError:
-        logging.error(
+        logging.exception(
             f"Project item {project_item_data.id} from project "
             f"{project_item_data.project_id} was NOT patched. "
-            "Value: error"
         )
     else:
         logging.info(
             f"Project item {project_item_data.id} from project "
-            f"{project_item_data.project_id} was patched. "
-            f'Value: {patch_project_item_data["data"]}'
+            f"{project_item_data.project_id} has been set to ready. "
         )
         return patch_project_item_data
 
@@ -163,6 +164,8 @@ def _get_item_value_by_name(item_list, property_name):
     for item in item_list:
         if property_name == item["id"]:
             return item["value"]
+        if property_name.lower() == item["label"].lower():
+            return item["value"]
 
 
 def get_plan(eosc_project_item_data, waldur_offering_data):
@@ -174,7 +177,7 @@ def get_plan(eosc_project_item_data, waldur_offering_data):
 
 
 def create_order(
-    waldur_offering_data, waldur_project_data_for_order, eosc_project_item_data
+    waldur_offering_data, waldur_project_data_for_order, eosc_project_item_data, invitation_email
 ):
     plan = get_plan(eosc_project_item_data, waldur_offering_data)
 
@@ -204,6 +207,9 @@ def create_order(
                 continue
             try:
                 property_type, property_id = offer_property["id"].split()
+                # TODO: drop once publishing works, id cannot be edited in MP
+                if property_id == 'gpu_k_hours':
+                    property_id = 'gpu_hours'
             except ValueError:
                 logging.error(
                     f'{offer_property["id"]}: not enough values to unpack (expected 2, got 1)'
@@ -226,19 +232,21 @@ def create_order(
             attributes=attributes,
             limits=limits,
         )
+        pass
     except ValueError:
         logging.error(f'There is no {plan["name"]} in ETAIS.')
+        raise
     else:
         logging.info(
             f'Order for {waldur_offering_data["name"]} with plan {plan["name"]} plan was created.'
         )
 
         content = (
-            f"Invitation has been sent to your email: {waldur_project_data_for_order}"
+            f"Invitation has been sent to your email: {invitation_email}"
         )
 
         post_message(project_item_data=eosc_project_item_data, content=content)
-        # patch_project_item(project_item_data=eosc_project_item_data)
+        patch_project_item(project_item_data=eosc_project_item_data)
 
         return order_data
 
@@ -355,6 +363,7 @@ def process_orders():
                     waldur_offering_data=waldur_offering_data[0],
                     waldur_project_data_for_order=waldur_project_data,
                     eosc_project_item_data=eosc_project_item_data,
+                    invitation_email=eosc_project_data.owner.email
                 )
 
             if event.type == "delete" or event.type == "update":
