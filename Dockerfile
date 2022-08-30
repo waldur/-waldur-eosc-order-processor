@@ -10,8 +10,8 @@ RUN apt-get update -y && \
     sed -i "s|last_name: str| # last_name: str|g" mp.py && \
     sed -i "s|voucher_id: int| # voucher_id: int|g" mp.py && \
     sed -i "s|timestamp = datetime.datetime|timestamp: datetime.datetime|g" mp.py &&\
-    sed -i "s|params = dict(oms_id=self.oms_id, from_timestamp=from_timestamp.isoformat())|params = dict(oms_id=self.oms_id, from_timestamp=from_timestamp.isoformat() + 'Z')|g" mp.py
-
+    sed -i "s|params = dict(oms_id=self.oms_id, from_timestamp=from_timestamp.isoformat())|params = dict(oms_id=self.oms_id, from_timestamp=from_timestamp.isoformat() + 'Z')|g" mp.py &&\
+    sed -i "s|country: str|country: Optional[str]|g" mp.py
 
 ENV PYTHONPATH "${PYTHONPATH}:/oms-adapter-jira"
 
