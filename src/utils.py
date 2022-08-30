@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import sys
 from datetime import datetime
 
 import pycountry
@@ -26,7 +27,7 @@ def get_env_or_fail(env_variable_name):
     # check that required environment variables is set and exit otherwise
     value = os.environ.get(env_variable_name)
     if not value:
-        logger.error(f'Mandatory variable {env_variable_name} is missing or empty.')
+        logger.error(f"Mandatory variable {env_variable_name} is missing or empty.")
         sys.exit(1)
     else:
         return value
@@ -69,7 +70,9 @@ def refresh_timestamp(time_now):  # file must be present, create in app.py or do
 def get_events(timestamp):
     timestamp_datetime = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
     events = mp.list_events(timestamp_datetime, limit=None)
-    logging.info(f"Received the following events from EOSC MP from {timestamp_datetime}: {events}.")
+    logging.info(
+        f"Received the following events from EOSC MP from {timestamp_datetime}: {events}."
+    )
     return events
 
 
@@ -117,10 +120,7 @@ def patch_project_item(project_item_data):
             ),
             verify=False,
             data={
-                "status": {
-                    "value": "string",
-                    "type": "ready"
-                },
+                "status": {"value": "string", "type": "ready"},
             },
         )
     except ValueError:
@@ -177,7 +177,10 @@ def get_plan(eosc_project_item_data, waldur_offering_data):
 
 
 def create_order(
-    waldur_offering_data, waldur_project_data_for_order, eosc_project_item_data, invitation_email
+    waldur_offering_data,
+    waldur_project_data_for_order,
+    eosc_project_item_data,
+    invitation_email,
 ):
     plan = get_plan(eosc_project_item_data, waldur_offering_data)
 
@@ -208,8 +211,8 @@ def create_order(
             try:
                 property_type, property_id = offer_property["id"].split()
                 # TODO: drop once publishing works, id cannot be edited in MP
-                if property_id == 'gpu_k_hours':
-                    property_id = 'gpu_hours'
+                if property_id == "gpu_k_hours":
+                    property_id = "gpu_hours"
             except ValueError:
                 logging.error(
                     f'{offer_property["id"]}: not enough values to unpack (expected 2, got 1)'
@@ -241,9 +244,7 @@ def create_order(
             f'Order for {waldur_offering_data["name"]} with plan {plan["name"]} plan was created.'
         )
 
-        content = (
-            f"Invitation has been sent to your email: {invitation_email}"
-        )
+        content = f"Invitation has been sent to your email: {invitation_email}"
 
         post_message(project_item_data=eosc_project_item_data, content=content)
         patch_project_item(project_item_data=eosc_project_item_data)
@@ -353,7 +354,10 @@ def process_orders():
                     {"name_exact": eosc_project_item_data.attributes.service}
                 )
                 if len(waldur_offering_data) == 0:
-                    raise Exception(f'Could not lookup offering in Waldur with requested name {eosc_project_item_data.attributes.service}.')
+                    raise Exception(
+                        "Could not lookup offering in Waldur with"
+                        f"requested name {eosc_project_item_data.attributes.service}."
+                    )
 
                 waldur_project_data = get_or_create_project(
                     eosc_project_data=eosc_project_data,
@@ -363,12 +367,12 @@ def process_orders():
                     waldur_offering_data=waldur_offering_data[0],
                     waldur_project_data_for_order=waldur_project_data,
                     eosc_project_item_data=eosc_project_item_data,
-                    invitation_email=eosc_project_data.owner.email
+                    invitation_email=eosc_project_data.owner.email,
                 )
 
             if event.type == "delete" or event.type == "update":
                 logging.info(f"Found event with unsupported type: {event.type}.")
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "The event can not be processed due to the following exception"
             )
