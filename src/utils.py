@@ -214,8 +214,8 @@ def create_order(
                 if property_id == "gpu_k_hours":
                     property_id = "gpu_hours"
             except ValueError:
-                logging.error(
-                    f'{offer_property["id"]}: not enough values to unpack (expected 2, got 1)'
+                logging.exception(
+                    f"Offering property has incorrect id ({offer_property['id']})"
                 )
             else:
                 if property_type == "limit":
