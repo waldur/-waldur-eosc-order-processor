@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waldur-eosc-order-processor
+spec:
+  selector:
+    matchLabels:
+      app: eosc-order-processor
+  template:
+    metadata:
+      labels:
+        app: eosc-order-processor
+    spec:
+      containers:
+        - name: waldur-eosc-publisher
+          image: registry.hpc.ut.ee/mirror/opennode/waldur-eosc-order-processor:latest
+          imagePullPolicy: Always
+          # TODO
+          # livenessProbe:
+          # readinessProbe:
+          env:
+          - name: EOSC_URL
+            value: "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"
+          - name: TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: waldur-eosc-secret
+                key: orderToken
+          - name: WALDUR_TARGET_ORGANIZATION_NAME
+            value: "<WALDUR_TARGET_ORGANIZATION_NAME>"
+          - name: OMS_ID
+            value: "2"
+          - name: WALDUR_URL
+            value: http://waldur-mastermind-api:8080/api/
+          - name: WALDUR_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: waldur-eosc-secret
+                key: waldurToken
