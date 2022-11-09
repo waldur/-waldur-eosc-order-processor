@@ -350,7 +350,7 @@ def process_orders():
                 )
                 waldur_organization_data = get_target_waldur_organization()
 
-                waldur_offering_data = waldur_client.list_marketplace_offerings(
+                waldur_offering_data = waldur_client.list_marketplace_public_offerings(
                     {"name_exact": eosc_project_item_data.attributes.service}
                 )
                 if len(waldur_offering_data) == 0:
