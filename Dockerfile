@@ -1,7 +1,7 @@
 FROM python:3.9.6-buster
 
 RUN apt-get update -y && \
-    pip install pipenv --no-cache-dir && \
+    pip install pipenv==2022.10.12 --no-cache-dir && \
     git clone https://github.com/cyfronet-fid/oms-adapter-jira.git && \
     cd oms-adapter-jira && \
     pipenv install --system && \
